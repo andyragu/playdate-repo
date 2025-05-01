@@ -12,10 +12,22 @@ import "CoreLibs/ui"
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
+
 -- Defining player variables
 local playerSize = 10
 local playerVelocity = 3
-local playerX, playerY = 200, 120
+
+local playerX = 200
+local playerY = 120
+
+-- Creating a Ray Function
+local function ray(borderX, borderY)
+    --Drawing ray from player to edge of screen
+    local vectorRay = pd.geometry.vector2D.new(borderX, borderY)
+    gfx.setColor(gfx.kColorWhite)
+    gfx.drawLine(playerX, playerY, vectorRay.dx, vectorRay.dy)
+end
+
 
 -- Drawing player image
 
@@ -58,6 +70,9 @@ function playdate.update()
         playerX = ring(playerX, -playerSize, 400 + playerSize)
         playerY = ring(playerY, -playerSize, 240 + playerSize)
     end
+
+    -- Draw Ray
+    ray(200, 0)
 
     -- Draw player
     playerImage:drawAnchored(playerX, playerY, 0.5, 0.5)
