@@ -20,12 +20,25 @@ local playerVelocity = 3
 local playerX = 200
 local playerY = 120
 
+
 -- Creating a Ray Function
-local function ray(borderX, borderY)
-    --Drawing ray from player to edge of screen
-    local vectorRay = pd.geometry.vector2D.new(borderX, borderY)
-    gfx.setColor(gfx.kColorWhite)
-    gfx.drawLine(playerX, playerY, vectorRay.dx, vectorRay.dy)
+local function ray(crankAngle)
+    local numRays = 30
+    local fov = math.rad(60)
+    local angleStart = crankAngle - fov / 2
+    local rayLength = 90
+
+    for i = 0, numRays - 1 do
+        local t = i / (numRays - 1) -- normalize from 0 to 1
+        local angle = angleStart + t * fov
+    
+        local endX = playerX + math.cos(angle) * rayLength
+        local endY = playerY + math.sin(angle) * rayLength
+    
+        gfx.setColor(gfx.kColorWhite)
+        gfx.drawLine(playerX, playerY, endX, endY)
+    end
+
 end
 
 
@@ -55,6 +68,9 @@ function playdate.update()
     -- Clear screen and setting background to black
     gfx.clear(gfx.kColorBlack)
 
+    -- Get crank angle 
+    local crankAngle = math.rad(pd.getCrankPosition())
+
     -- Draw crank indicator if crank is docked
     if pd.isCrankDocked() then
         pd.ui.crankIndicator:draw()
@@ -71,8 +87,8 @@ function playdate.update()
         playerY = ring(playerY, -playerSize, 240 + playerSize)
     end
 
-    -- Draw Ray
-    ray(200, 0)
+    -- Draw Rays
+    ray(crankAngle)
 
     -- Draw player
     playerImage:drawAnchored(playerX, playerY, 0.5, 0.5)
