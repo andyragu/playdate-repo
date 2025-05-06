@@ -1,8 +1,3 @@
--- Below is a small example program where you can move a circle
--- around with the crank. You can delete everything in this file,
--- but make sure to add back in a playdate.update function since
--- one is required for every Playdate game!
--- =============================================================
 
 -- Importing libraries used for drawCircleAtPoint and crankIndicator
 import "CoreLibs/graphics"
@@ -14,12 +9,39 @@ local gfx <const> = playdate.graphics
 
 
 -- Defining player variables
-local playerSize = 10
-local playerVelocity = 3
+local playerSize = 5
+local playerVelocity = 1
 
 local playerX = 200
 local playerY = 120
 
+
+-- Grid settings
+local tileSize = 20
+local gridWidth = math.floor(400 / tileSize)
+local gridHeight = math.floor(240 / tileSize)
+
+-- Player Coords to Grid Coords
+local playerGridX = math.floor(playerX / tileSize)
+local playerGridY = math.floor(playerY / tileSize)
+
+-- Wall Storage
+local walls = {}
+
+-- Seed for randomness (once per game)
+math.randomseed(pd.getSecondsSinceEpoch())
+
+-- Generate random walls
+for y = 0, gridHeight - 1 do
+    walls[y] = {}
+    for x = 0, gridWidth - 1 do
+        if x == playerGridX and y == playerGridY then
+            walls[y][x] = false
+        else
+            walls[y][x] = math.random() < 0.25 -- 25% chance of wall
+        end
+    end
+end
 
 -- Creating a Ray Function
 local function ray(crankAngle)
@@ -71,6 +93,16 @@ function playdate.update()
     -- Get crank angle 
     local crankAngle = math.rad(pd.getCrankPosition())
 
+    -- Draw walls
+    for y = 0, gridHeight - 1 do
+        for x = 0, gridWidth - 1 do
+            if walls[y][x] then
+                --gfx.setColor(gfx.kColorBlack)
+                gfx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize)
+            end
+        end
+    end
+
     -- Draw crank indicator if crank is docked
     if pd.isCrankDocked() then
         pd.ui.crankIndicator:draw()
@@ -80,8 +112,17 @@ function playdate.update()
         local xVelocity = math.cos(math.rad(crankPosition)) * playerVelocity
         local yVelocity = math.sin(math.rad(crankPosition)) * playerVelocity
         -- Move player
-        playerX += xVelocity
-        playerY += yVelocity
+
+        local nextX = playerX + xVelocity
+        local nextY = playerY + yVelocity
+
+        local playerPosX = math.floor(nextX / tileSize)
+        local playerPosY = math.floor(nextY / tileSize)
+
+        if walls[playerPosY] and not walls[playerPosY][playerPosX] then
+            playerX = nextX
+            playerY = nextY
+        end
         -- Loop player position
         playerX = ring(playerX, -playerSize, 400 + playerSize)
         playerY = ring(playerY, -playerSize, 240 + playerSize)
